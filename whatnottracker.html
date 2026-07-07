@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whatnot Group Sales Tracker</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --panel: #1e2126;
+    --panel2: #262a31;
+    --border: #383d46;
+    --text: #eef0f3;
+    --muted: #9aa1ac;
+    --accent: #4f8cff;
+    --danger: #ff5c5c;
+    --good: #3ddc84;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 14px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { margin: 0 0 10px 0; font-size: 18px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav button {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  main { padding: 16px; max-width: 900px; margin: 0 auto; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 { margin-top: 0; font-size: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 14px;
+  }
+  textarea { min-height: 140px; font-family: monospace; font-size: 12px; }
+  input[type=color] { width: 48px; height: 36px; padding: 2px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .roster-row { display: grid; grid-template-columns: 1fr 60px 110px; gap: 8px; align-items: end; margin-bottom: 8px; }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
+  .btn.danger { background: var(--danger); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .next-num {
+    text-align: center;
+    font-size: 46px;
+    font-weight: 800;
+    margin: 6px 0 16px 0;
+  }
+  .next-num span { color: var(--muted); font-size: 16px; display: block; font-weight: 500; }
+  .tap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (min-width: 560px) { .tap-grid { grid-template-columns: repeat(4, 1fr); } }
+  .tap-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 26px 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; margin-top: 12px; }
+  .stat-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+  .stat-box .num { font-size: 20px; font-weight: 700; }
+  .stat-box .lbl { font-size: 11px; color: var(--muted); }
+  .flag-bad { color: var(--danger); font-weight: 700; }
+  .flag-ok { color: var(--good); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .log-list { max-height: 260px; overflow-y: auto; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Whatnot Group Sales Tracker</h1>
+  <nav>
+    <button data-screen="setup" class="active">Setup</button>
+    <button data-screen="live">Live Tracker</button>
+    <button data-screen="reconcile">Reconcile Show</button>
+    <button data-screen="history">Reserve Fund</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- SETUP -->
+  <div class="screen active" id="screen-setup">
+    <div class="card">
+      <h2>How this works</h2>
+      <p class="muted">
+        Before the show: stick a colored dot sticker on each card matching its owner's color below (no numbers yet).
+        During the show: when a card sells, tap that person's color button on the Live Tracker tab — it assigns the
+        next sale number automatically. After the show: paste the Whatnot export on the Reconcile tab to calculate
+        everyone's totals, fees, and the reserve.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Team Roster</h2>
+      <div class="roster-row"><label style="margin:0">Name</label><label style="margin:0">Color</label><label style="margin:0">Cards brought this show</label></div>
+      <div id="roster"></div>
+    </div>
+
+    <div class="card">
+      <h2>Fees &amp; Reserve</h2>
+      <p class="muted">Defaults below match Whatnot's published standard US rate as of July 2026: 8% commission
+        (5% for electronics, 4% for coins/currency - check your Seller Dashboard if you sell those) plus 2.9% + $0.30
+        payment processing per order. Fees can change or vary by promo, so double check against your own payout
+        statement and adjust here if needed.</p>
+      <div class="row">
+        <div style="flex:1;min-width:140px">
+          <label>Whatnot commission %</label>
+          <input type="number" id="feeWhatnot" step="0.1" min="0">
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label>Payment processing %</label>
+          <input type="number" id="feeProcessing" step="0.1" min="0">
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label>Processing fixed fee ($/order)</label>
+          <input type="number" id="feeProcessingFixed" step="0.01" min="0">
+        </div>
+        <div style="flex:1;min-width:140px">
+          <label>Reserve % (giveaways/growth)</label>
+          <input type="number" id="feeReserve" step="0.1" min="0">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="saveSetup">Save Setup</button>
+    <span class="muted" id="saveMsg" style="margin-left:10px"></span>
+  </div>
+
+  <!-- LIVE -->
+  <div class="screen" id="screen-live">
+    <div class="card">
+      <div class="next-num"><span>Next Sale Number</span><span id="nextNumBig"></span></div>
+      <div class="tap-grid" id="tapGrid"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn secondary" id="undoBtn">Undo Last Tap</button>
+        <button class="btn danger" id="resetShowBtn">Reset Show (start over)</button>
+      </div>
+      <div class="stat-grid" id="liveStats"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">Log</h2>
+        <button class="btn secondary" id="addEntryBtn">+ Add Manual Entry</button>
+      </div>
+      <p class="muted">Made a mistake? Edit the number or owner directly in the table, or delete a row.</p>
+      <div class="log-list">
+        <table>
+          <thead><tr><th>#</th><th>Owner</th><th>Time</th><th></th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECONCILE -->
+  <div class="screen" id="screen-reconcile">
+    <div class="card">
+      <h2>1. Import Whatnot export</h2>
+      <p class="muted">Upload the CSV file Whatnot gives you, or paste the raw text below instead - either works.</p>
+      <div class="row">
+        <input type="file" id="csvFile" accept=".csv,text/csv">
+        <span class="muted">or paste below</span>
+      </div>
+      <textarea id="csvInput" style="margin-top:10px" placeholder="Order ID,Item Title,Sale Price,...&#10;1001,Card Shown on Screen #1,12.00,...&#10;1002,Card Shown on Screen #2,8.50,..."></textarea>
+      <button class="btn" id="parseCsvBtn" style="margin-top:10px">Parse Export</button>
+      <span class="muted" id="parseMsg" style="margin-left:10px"></span>
+    </div>
+
+    <div class="card" id="mappingCard" style="display:none">
+      <h2>2. Confirm columns</h2>
+      <div class="row">
+        <div style="flex:1;min-width:160px">
+          <label>Which column is the item title (contains the sale #)?</label>
+          <select id="titleCol"></select>
+        </div>
+        <div style="flex:1;min-width:160px">
+          <label>Which column is the sale price?</label>
+          <select id="priceCol"></select>
+        </div>
+      </div>
+      <button class="btn" id="reconcileBtn" style="margin-top:10px">Calculate Totals</button>
+    </div>
+
+    <div class="card" id="resultsCard" style="display:none">
+      <h2>Per Person Totals</h2>
+      <p class="muted">Processing fee assumes one $0.30 fixed fee per sold item. If a buyer checks out multiple wins
+        together in one order, Whatnot only charges $0.30 once for that order - so this slightly overestimates
+        the fixed fee in that case (take home is a bit conservative, not inflated).</p>
+      <table>
+        <thead><tr><th>Name</th><th>Sold</th><th>Gross</th><th>Whatnot Fee</th><th>Processing Fee</th><th>Net Profit</th><th>Reserve</th><th>Take Home</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+      <div class="stat-grid" id="unsoldStats"></div>
+      <div id="flagsBox" style="margin-top:12px"></div>
+      <button class="btn" id="archiveBtn" style="margin-top:14px">Archive This Show to Reserve Fund + Reset Live Tracker</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen" id="screen-history">
+    <div class="card">
+      <h2>Reserve Fund History</h2>
+      <p class="muted">Running log of the 10% (or whatever %) reserve set aside each show for giveaways/expansion.</p>
+      <table>
+        <thead><tr><th>Date</th><th>Total Net Profit</th><th>Reserve Contribution</th><th>Cumulative Balance</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div id="confirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;">
+  <div class="card" style="max-width:340px;margin:16px;">
+    <p id="confirmMsg" style="margin-top:0"></p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn secondary" id="confirmNo">Cancel</button>
+      <button class="btn danger" id="confirmYes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showConfirm(message, onYes) {
+  const overlay = document.getElementById("confirmOverlay");
+  document.getElementById("confirmMsg").textContent = message;
+  overlay.style.display = "flex";
+  const yesBtn = document.getElementById("confirmYes");
+  const noBtn = document.getElementById("confirmNo");
+  const cleanup = () => { overlay.style.display = "none"; yesBtn.onclick = null; noBtn.onclick = null; };
+  yesBtn.onclick = () => { cleanup(); onYes(); };
+  noBtn.onclick = cleanup;
+}
+
+const STORAGE_KEY = "whatnotTrackerData";
+const DEFAULT_COLORS = ["#e74c3c", "#3498db", "#2ecc71", "#f1c40f"];
+
+function defaultData() {
+  return {
+    people: [
+      { name: "Jon", color: DEFAULT_COLORS[0], brought: 0 },
+      { name: "Zack", color: DEFAULT_COLORS[1], brought: 0 },
+      { name: "Jeremy", color: DEFAULT_COLORS[2], brought: 0 },
+      { name: "Jax", color: DEFAULT_COLORS[3], brought: 0 }
+    ],
+    settings: { feeWhatnot: 8, feeProcessing: 2.9, feeProcessingFixed: 0.30, feeReserve: 10 },
+    currentShow: { nextNumber: 1, log: [] },
+    history: []
+  };
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultData();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultData(), parsed, {
+      people: parsed.people || defaultData().people,
+      settings: Object.assign(defaultData().settings, parsed.settings),
+      currentShow: parsed.currentShow || { nextNumber: 1, log: [] },
+      history: parsed.history || []
+    });
+  } catch (e) { return defaultData(); }
+}
+
+let data = loadData();
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+// ---------- Nav ----------
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("screen-" + btn.dataset.screen).classList.add("active");
+    if (btn.dataset.screen === "live") renderLive();
+    if (btn.dataset.screen === "history") renderHistory();
+  });
+});
+
+// ---------- Setup ----------
+function renderSetup() {
+  const rosterEl = document.getElementById("roster");
+  rosterEl.innerHTML = "";
+  data.people.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "roster-row";
+    row.innerHTML = `
+      <input type="text" data-idx="${i}" class="pname" value="${p.name}" autocomplete="off">
+      <input type="color" data-idx="${i}" class="pcolor" value="${p.color}" autocomplete="off">
+      <input type="number" data-idx="${i}" class="pbrought" min="0" value="${p.brought}" autocomplete="off">
+    `;
+    rosterEl.appendChild(row);
+  });
+  document.getElementById("feeWhatnot").value = data.settings.feeWhatnot;
+  document.getElementById("feeProcessing").value = data.settings.feeProcessing;
+  document.getElementById("feeProcessingFixed").value = data.settings.feeProcessingFixed;
+  document.getElementById("feeReserve").value = data.settings.feeReserve;
+}
+
+document.getElementById("saveSetup").addEventListener("click", () => {
+  document.querySelectorAll(".pname").forEach(el => data.people[el.dataset.idx].name = el.value.trim() || data.people[el.dataset.idx].name);
+  document.querySelectorAll(".pcolor").forEach(el => data.people[el.dataset.idx].color = el.value);
+  document.querySelectorAll(".pbrought").forEach(el => data.people[el.dataset.idx].brought = parseInt(el.value) || 0);
+  data.settings.feeWhatnot = parseFloat(document.getElementById("feeWhatnot").value) || 0;
+  data.settings.feeProcessing = parseFloat(document.getElementById("feeProcessing").value) || 0;
+  data.settings.feeProcessingFixed = parseFloat(document.getElementById("feeProcessingFixed").value) || 0;
+  data.settings.feeReserve = parseFloat(document.getElementById("feeReserve").value) || 0;
+  save();
+  const msg = document.getElementById("saveMsg");
+  msg.textContent = "Saved!";
+  setTimeout(() => msg.textContent = "", 1500);
+});
+
+// ---------- Live Tracker ----------
+function renderLive() {
+  document.getElementById("nextNumBig").textContent = "#" + data.currentShow.nextNumber;
+  const grid = document.getElementById("tapGrid");
+  grid.innerHTML = "";
+  data.people.forEach((p) => {
+    const btn = document.createElement("button");
+    btn.className = "tap-btn";
+    btn.style.background = p.color;
+    btn.textContent = p.name;
+    btn.addEventListener("click", () => tapSale(p.name));
+    grid.appendChild(btn);
+  });
+  renderLiveStats();
+  renderLog();
+}
+
+function tapSale(ownerName) {
+  data.currentShow.log.push({ number: data.currentShow.nextNumber, owner: ownerName, time: new Date().toLocaleTimeString() });
+  data.currentShow.nextNumber += 1;
+  save();
+  renderLive();
+}
+
+document.getElementById("undoBtn").addEventListener("click", () => {
+  if (!data.currentShow.log.length) return;
+  const last = data.currentShow.log.pop();
+  data.currentShow.nextNumber = last.number;
+  save();
+  renderLive();
+});
+
+document.getElementById("resetShowBtn").addEventListener("click", () => {
+  showConfirm("Reset the live tracker log and start numbering at #1 again? This cannot be undone.", () => {
+    data.currentShow = { nextNumber: 1, log: [] };
+    save();
+    renderLive();
+  });
+});
+
+function renderLiveStats() {
+  const box = document.getElementById("liveStats");
+  box.innerHTML = "";
+  data.people.forEach(p => {
+    const sold = data.currentShow.log.filter(l => l.owner === p.name).length;
+    const remaining = p.brought - sold;
+    const div = document.createElement("div");
+    div.className = "stat-box";
+    div.innerHTML = `<div class="num" style="color:${p.color}">${sold}</div><div class="lbl">${p.name} sold</div><div class="muted">${remaining} left</div>`;
+    box.appendChild(div);
+  });
+}
+
+function renderLog() {
+  const body = document.getElementById("logBody");
+  body.innerHTML = "";
+  const colorMap = {};
+  data.people.forEach(p => colorMap[p.name] = p.color);
+  for (let i = data.currentShow.log.length - 1; i >= 0; i--) {
+    const l = data.currentShow.log[i];
+    const tr = document.createElement("tr");
+    const ownerOptions = data.people.map(p =>
+      `<option value="${p.name}" ${p.name === l.owner ? "selected" : ""}>${p.name}</option>`).join("");
+    tr.innerHTML = `
+      <td><input type="number" class="log-num" data-idx="${i}" value="${l.number}" style="width:64px"></td>
+      <td>
+        <span class="swatch" style="background:${colorMap[l.owner] || '#888'}"></span>
+        <select class="log-owner" data-idx="${i}" style="width:auto;display:inline-block">${ownerOptions}</select>
+      </td>
+      <td class="muted">${l.time}</td>
+      <td><button class="btn danger log-delete" data-idx="${i}" style="padding:5px 10px;font-size:12px">Delete</button></td>`;
+    body.appendChild(tr);
+  }
+}
+
+document.getElementById("logBody").addEventListener("change", (e) => {
+  const idx = parseInt(e.target.dataset.idx);
+  if (isNaN(idx)) return;
+  if (e.target.classList.contains("log-num")) {
+    data.currentShow.log[idx].number = parseInt(e.target.value) || data.currentShow.log[idx].number;
+  } else if (e.target.classList.contains("log-owner")) {
+    data.currentShow.log[idx].owner = e.target.value;
+  } else { return; }
+  save();
+  renderLiveStats();
+  renderLog();
+});
+
+document.getElementById("logBody").addEventListener("click", (e) => {
+  if (!e.target.classList.contains("log-delete")) return;
+  const idx = parseInt(e.target.dataset.idx);
+  const entry = data.currentShow.log[idx];
+  showConfirm(`Delete sale #${entry.number} (${entry.owner})? This can't be undone.`, () => {
+    data.currentShow.log.splice(idx, 1);
+    save();
+    renderLive();
+  });
+});
+
+document.getElementById("addEntryBtn").addEventListener("click", () => {
+  tapSale(data.people[0].name);
+});
+
+// ---------- Reconcile ----------
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ""; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+      else if (c === '\r') { /* skip */ }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+
+let parsedRows = null, parsedHeader = null;
+
+document.getElementById("csvFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById("csvInput").value = ev.target.result;
+    document.getElementById("parseCsvBtn").click();
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById("parseCsvBtn").addEventListener("click", () => {
+  const text = document.getElementById("csvInput").value;
+  const rows = parseCSV(text);
+  const msg = document.getElementById("parseMsg");
+  if (rows.length < 2) {
+    msg.textContent = "Couldn't find a header row + data rows. Check the paste.";
+    document.getElementById("mappingCard").style.display = "none";
+    return;
+  }
+  parsedHeader = rows[0];
+  parsedRows = rows.slice(1);
+  msg.textContent = `Found ${parsedRows.length} rows, ${parsedHeader.length} columns.`;
+  const titleSel = document.getElementById("titleCol");
+  const priceSel = document.getElementById("priceCol");
+  titleSel.innerHTML = ""; priceSel.innerHTML = "";
+  parsedHeader.forEach((h, i) => {
+    const o1 = document.createElement("option"); o1.value = i; o1.textContent = h || `Column ${i+1}`;
+    titleSel.appendChild(o1);
+    const o2 = document.createElement("option"); o2.value = i; o2.textContent = h || `Column ${i+1}`;
+    priceSel.appendChild(o2);
+  });
+  const guessTitle = parsedHeader.findIndex(h => /title|item|product|name/i.test(h));
+  const guessPrice = parsedHeader.findIndex(h => /price|amount|sale/i.test(h));
+  if (guessTitle >= 0) titleSel.value = guessTitle;
+  if (guessPrice >= 0) priceSel.value = guessPrice;
+  document.getElementById("mappingCard").style.display = "block";
+  document.getElementById("resultsCard").style.display = "none";
+});
+
+let lastCalc = null;
+
+document.getElementById("reconcileBtn").addEventListener("click", () => {
+  const titleIdx = parseInt(document.getElementById("titleCol").value);
+  const priceIdx = parseInt(document.getElementById("priceCol").value);
+
+  const numberToOwner = {};
+  data.currentShow.log.forEach(l => numberToOwner[l.number] = l.owner);
+
+  const exportNumbers = new Set();
+  const perPerson = {};
+  data.people.forEach(p => perPerson[p.name] = { sold: 0, gross: 0 });
+  const unmatchedExportRows = [];
+
+  parsedRows.forEach(r => {
+    const title = (r[titleIdx] || "").trim();
+    const priceRaw = (r[priceIdx] || "").replace(/[^0-9.\-]/g, "");
+    const price = parseFloat(priceRaw) || 0;
+    const m = title.match(/(\d+)(?!.*\d)/);
+    if (!m) { unmatchedExportRows.push(title || "(blank title)"); return; }
+    const num = parseInt(m[1]);
+    exportNumbers.add(num);
+    const owner = numberToOwner[num];
+    if (!owner || !perPerson[owner]) { unmatchedExportRows.push(`#${num} - ${title} (no tap logged for this number)`); return; }
+    perPerson[owner].sold += 1;
+    perPerson[owner].gross += price;
+  });
+
+  const loggedNoExport = data.currentShow.log.filter(l => !exportNumbers.has(l.number));
+
+  const feeW = data.settings.feeWhatnot / 100;
+  const feeP = data.settings.feeProcessing / 100;
+  const feePFixed = data.settings.feeProcessingFixed || 0;
+  const feeR = data.settings.feeReserve / 100;
+
+  const resultsBody = document.getElementById("resultsBody");
+  resultsBody.innerHTML = "";
+  let totalNet = 0, totalReserve = 0;
+  const calcResults = [];
+  data.people.forEach(p => {
+    const g = perPerson[p.name].gross;
+    const sold = perPerson[p.name].sold;
+    const wFee = g * feeW, pFee = (g * feeP) + (sold * feePFixed);
+    const net = g - wFee - pFee;
+    const reserve = net * feeR;
+    const takeHome = net - reserve;
+    totalNet += net; totalReserve += reserve;
+    calcResults.push({ name: p.name, sold: perPerson[p.name].sold, gross: g, wFee, pFee, net, reserve, takeHome });
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><span class="swatch" style="background:${p.color}"></span>${p.name}</td><td>${perPerson[p.name].sold}</td>
+      <td>$${g.toFixed(2)}</td><td>$${wFee.toFixed(2)}</td><td>$${pFee.toFixed(2)}</td>
+      <td>$${net.toFixed(2)}</td><td>$${reserve.toFixed(2)}</td><td><b>$${takeHome.toFixed(2)}</b></td>`;
+    resultsBody.appendChild(tr);
+  });
+
+  const unsoldBox = document.getElementById("unsoldStats");
+  unsoldBox.innerHTML = "";
+  data.people.forEach(p => {
+    const remaining = p.brought - perPerson[p.name].sold;
+    const div = document.createElement("div");
+    div.className = "stat-box";
+    div.innerHTML = `<div class="num ${remaining > 0 ? 'flag-bad' : 'flag-ok'}">${remaining}</div><div class="lbl">${p.name} unsold remaining</div>`;
+    unsoldBox.appendChild(div);
+  });
+
+  const flagsBox = document.getElementById("flagsBox");
+  flagsBox.innerHTML = "";
+  if (unmatchedExportRows.length) {
+    flagsBox.innerHTML += `<p class="flag-bad">${unmatchedExportRows.length} export row(s) could not be matched to a logged tap:</p><ul class="muted">${unmatchedExportRows.slice(0,20).map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  }
+  if (loggedNoExport.length) {
+    flagsBox.innerHTML += `<p class="flag-bad">${loggedNoExport.length} logged number(s) never showed up in the export (canceled/no sale?): ${loggedNoExport.map(l=>'#'+l.number).join(", ")}</p>`;
+  }
+  if (!unmatchedExportRows.length && !loggedNoExport.length) {
+    flagsBox.innerHTML = `<p class="flag-ok">Everything matched cleanly.</p>`;
+  }
+
+  lastCalc = { totalNet, totalReserve };
+  document.getElementById("resultsCard").style.display = "block";
+});
+
+document.getElementById("archiveBtn").addEventListener("click", () => {
+  if (!lastCalc) return;
+  showConfirm("Archive this show's reserve to the Reserve Fund tab and reset the live tracker for the next show? Do this only after you've recorded/paid out this show's numbers.", () => {
+    data.history.push({ date: new Date().toLocaleDateString(), totalNet: lastCalc.totalNet, reserve: lastCalc.totalReserve });
+    data.currentShow = { nextNumber: 1, log: [] };
+    save();
+    document.getElementById("csvInput").value = "";
+    document.getElementById("mappingCard").style.display = "none";
+    document.getElementById("resultsCard").style.display = "none";
+    document.getElementById("parseMsg").textContent = "Archived. Live tracker reset for next show.";
+  });
+});
+
+// ---------- History ----------
+function renderHistory() {
+  const body = document.getElementById("historyBody");
+  body.innerHTML = "";
+  let cum = 0;
+  data.history.forEach(h => {
+    cum += h.reserve;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${h.date}</td><td>$${h.totalNet.toFixed(2)}</td><td>$${h.reserve.toFixed(2)}</td><td><b>$${cum.toFixed(2)}</b></td>`;
+    body.appendChild(tr);
+  });
+  if (!data.history.length) {
+    body.innerHTML = `<tr><td colspan="4" class="muted">No shows archived yet.</td></tr>`;
+  }
+}
+
+renderSetup();
+renderLive();
+</script>
+</body>
+</html>
