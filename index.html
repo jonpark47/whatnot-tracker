@@ -382,11 +382,15 @@
   <div class="screen" id="screen-search">
     <div class="card">
       <h2>Card Price Search</h2>
-      <p class="muted">Search TCGPlayer instantly during a show to check market pricing. This opens TCGPlayer's own search results in a new tab - this app doesn't have TCGPlayer API/developer access to embed live results directly inside the app yet.</p>
+      <p class="muted">Type a card name, then tap a source to check its price. Each opens that site's real search results in a new tab - no single source is always highest, so checking 2-3 quickly is the reliable move.</p>
       <div class="row" style="margin-top:10px">
-        <input type="text" id="cardSearchInput" placeholder="e.g. Charizard VMAX, Blue-Eyes White Dragon" style="flex:1;min-width:0">
+        <input type="text" id="cardSearchInput" placeholder="e.g. Destined Rivals Mewtwo" style="flex:1;min-width:0">
       </div>
-      <button class="btn" id="cardSearchBtn" style="margin-top:10px;width:100%">🔍 Search TCGPlayer</button>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="searchTcgBtn" style="flex:1">TCGPlayer</button>
+        <button class="btn secondary" id="searchEbayBtn" style="flex:1">eBay Sold</button>
+      </div>
+      <p class="muted" style="margin-top:10px">PriceCharting link isn't wired up yet - couldn't verify its exact search URL. Let me know if you want that added once we confirm the format.</p>
     </div>
   </div>
 
@@ -831,14 +835,21 @@ function connectRoom(roomCode) {
 }
 
 // ---------- Card Price Search ----------
-function openTcgSearch() {
-  const q = document.getElementById("cardSearchInput").value.trim();
+function getSearchQuery() {
+  return document.getElementById("cardSearchInput").value.trim();
+}
+document.getElementById("searchTcgBtn").addEventListener("click", () => {
+  const q = getSearchQuery();
   if (!q) return;
   window.open("https://www.tcgplayer.com/search/all/product?q=" + encodeURIComponent(q), "_blank");
-}
-document.getElementById("cardSearchBtn").addEventListener("click", openTcgSearch);
+});
+document.getElementById("searchEbayBtn").addEventListener("click", () => {
+  const q = getSearchQuery();
+  if (!q) return;
+  window.open("https://www.ebay.com/sch/i.html?_nkw=" + encodeURIComponent(q) + "&LH_Sold=1&LH_Complete=1", "_blank");
+});
 document.getElementById("cardSearchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); openTcgSearch(); }
+  if (e.key === "Enter") { e.preventDefault(); document.getElementById("searchTcgBtn").click(); }
 });
 
 // ---------- Nav ----------
