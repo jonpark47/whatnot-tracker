@@ -600,10 +600,10 @@ const DEFAULT_COLORS = ["#9b59b6", "#3498db", "#2ecc71", "#000000"];
 function defaultData() {
   return {
     people: [
-      { name: "Jon", color: DEFAULT_COLORS[0], brought: 0 },
-      { name: "Zack", color: DEFAULT_COLORS[1], brought: 0 },
-      { name: "Jeremy", color: DEFAULT_COLORS[2], brought: 0 },
-      { name: "Jax", color: DEFAULT_COLORS[3], brought: 0 }
+      { name: "Jon", color: DEFAULT_COLORS[0], brought: 0, costBasis: 0 },
+      { name: "Zack", color: DEFAULT_COLORS[1], brought: 0, costBasis: 0 },
+      { name: "Jeremy", color: DEFAULT_COLORS[2], brought: 0, costBasis: 0 },
+      { name: "Jax", color: DEFAULT_COLORS[3], brought: 0, costBasis: 0 }
     ],
     settings: { feeWhatnot: 8, feeProcessing: 2.9, feeProcessingFixed: 0.30, feeReserve: 10 },
     currentShow: { nextNumber: 1, log: [] },
@@ -615,7 +615,7 @@ function defaultData() {
 function normalizeData(parsed) {
   if (!parsed) return defaultData();
   return Object.assign(defaultData(), parsed, {
-    people: parsed.people || defaultData().people,
+    people: (parsed.people || defaultData().people).map(p => Object.assign({ costBasis: 0 }, p)),
     settings: Object.assign(defaultData().settings, parsed.settings),
     currentShow: parsed.currentShow || { nextNumber: 1, log: [] },
     history: parsed.history || [],
@@ -728,6 +728,10 @@ function renderSetup() {
           <label style="margin:0 0 2px">Cards brought this show</label>
           <input type="number" data-idx="${i}" class="pbrought" min="0" value="${p.brought}" autocomplete="off">
         </div>
+        <div style="flex:1">
+          <label style="margin:0 0 2px">Cost of cards brought ($)</label>
+          <input type="number" data-idx="${i}" class="pcost" min="0" step="0.01" value="${p.costBasis}" autocomplete="off">
+        </div>
       </div>
     `;
     rosterEl.appendChild(row);
@@ -744,6 +748,7 @@ document.getElementById("saveSetup").addEventListener("click", () => {
   document.querySelectorAll(".pname").forEach(el => data.people[el.dataset.idx].name = el.value.trim() || data.people[el.dataset.idx].name);
   document.querySelectorAll(".pcolor").forEach(el => data.people[el.dataset.idx].color = el.value);
   document.querySelectorAll(".pbrought").forEach(el => data.people[el.dataset.idx].brought = parseInt(el.value) || 0);
+  document.querySelectorAll(".pcost").forEach(el => data.people[el.dataset.idx].costBasis = parseFloat(el.value) || 0);
   data.settings.feeWhatnot = parseFloat(document.getElementById("feeWhatnot").value) || 0;
   data.settings.feeProcessing = parseFloat(document.getElementById("feeProcessing").value) || 0;
   data.settings.feeProcessingFixed = parseFloat(document.getElementById("feeProcessingFixed").value) || 0;
@@ -968,8 +973,10 @@ document.getElementById("reconcileBtn").addEventListener("click", () => {
     const net = g - wFee - pFee;
     const reserve = net * feeR;
     const takeHome = net - reserve;
+    const cogs = p.brought > 0 ? (p.costBasis / p.brought) * sold : 0;
+    const trueProfit = takeHome - cogs;
     totalNet += net; totalReserve += reserve;
-    calcResults.push({ name: p.name, sold: perPerson[p.name].sold, gross: g, wFee, pFee, net, reserve, takeHome });
+    calcResults.push({ name: p.name, sold: perPerson[p.name].sold, gross: g, wFee, pFee, net, reserve, takeHome, cogs, trueProfit });
     const div = document.createElement("div");
     div.className = "result-card";
     div.style.borderLeftColor = p.color;
@@ -979,7 +986,8 @@ document.getElementById("reconcileBtn").addEventListener("click", () => {
         <span class="result-take">$${takeHome.toFixed(2)}</span>
       </div>
       <div class="result-sub">${sold} sold · $${g.toFixed(2)} gross</div>
-      <div class="result-breakdown muted">Fees $${(wFee + pFee).toFixed(2)} · Reserve $${reserve.toFixed(2)} · Net $${net.toFixed(2)}</div>`;
+      <div class="result-breakdown muted">Fees $${(wFee + pFee).toFixed(2)} · Reserve $${reserve.toFixed(2)} · Net $${net.toFixed(2)}</div>
+      ${p.costBasis > 0 ? `<div class="result-breakdown muted">Cost of cards sold $${cogs.toFixed(2)} · <b style="color:var(--text)">True profit $${trueProfit.toFixed(2)}</b></div>` : ""}`;
     resultsBody.appendChild(div);
   });
 
@@ -1014,7 +1022,8 @@ document.getElementById("copySummaryBtn").addEventListener("click", () => {
   if (!lastCalcResults.length) return;
   const lines = [`Whatnot show summary - ${new Date().toLocaleDateString()}`, ""];
   lastCalcResults.forEach(r => {
-    lines.push(`${r.name}: ${r.sold} sold, $${r.gross.toFixed(2)} gross -> $${r.takeHome.toFixed(2)} take home`);
+    const profitNote = r.cogs > 0 ? ` (true profit after $${r.cogs.toFixed(2)} cost of cards: $${r.trueProfit.toFixed(2)})` : "";
+    lines.push(`${r.name}: ${r.sold} sold, $${r.gross.toFixed(2)} gross -> $${r.takeHome.toFixed(2)} take home${profitNote}`);
   });
   lines.push("", `Total net profit: $${lastCalc.totalNet.toFixed(2)}`, `Reserve set aside: $${lastCalc.totalReserve.toFixed(2)}`);
   const text = lines.join("\n");
@@ -1032,7 +1041,7 @@ document.getElementById("archiveBtn").addEventListener("click", () => {
   showConfirm("Archive this show's reserve to the Reserve Fund tab and reset the live tracker for the next show? Do this only after you've recorded/paid out this show's numbers.", () => {
     data.history.push({
       date: new Date().toLocaleDateString(), totalNet: lastCalc.totalNet, reserve: lastCalc.totalReserve,
-      breakdown: lastCalcResults.map(r => ({ name: r.name, sold: r.sold, gross: r.gross, takeHome: r.takeHome }))
+      breakdown: lastCalcResults.map(r => ({ name: r.name, sold: r.sold, gross: r.gross, takeHome: r.takeHome, cogs: r.cogs, trueProfit: r.trueProfit }))
     });
     data.currentShow = { nextNumber: 1, log: [] };
     save();
@@ -1233,7 +1242,7 @@ function renderHistory() {
       if (hasBreakdown) {
         el.innerHTML = `<summary>${headHtml}</summary>
           <div class="history-detail-list">
-            ${h.breakdown.map(b => `<div class="list-row" style="border:none;padding:5px 0"><span style="flex:1">${b.name}</span><span class="muted" style="flex-shrink:0">${b.sold} sold</span><span style="flex-shrink:0;font-weight:700">$${b.takeHome.toFixed(2)}</span></div>`).join("")}
+            ${h.breakdown.map(b => `<div class="list-row" style="border:none;padding:5px 0"><span style="flex:1">${b.name}</span><span class="muted" style="flex-shrink:0">${b.sold} sold</span><span style="flex-shrink:0;font-weight:700">$${b.takeHome.toFixed(2)}</span></div>${b.cogs > 0 ? `<div class="muted" style="font-size:11px;padding:0 0 5px">True profit after $${b.cogs.toFixed(2)} cost of cards: $${b.trueProfit.toFixed(2)}</div>` : ""}`).join("")}
             <p class="muted" style="margin-top:6px">Total net profit this show: $${h.totalNet.toFixed(2)} · Cumulative reserve: $${cum.toFixed(2)}</p>
           </div>`;
       } else {
