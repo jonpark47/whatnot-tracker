@@ -378,6 +378,18 @@
     </details>
   </div>
 
+  <!-- SEARCH -->
+  <div class="screen" id="screen-search">
+    <div class="card">
+      <h2>Card Price Search</h2>
+      <p class="muted">Search TCGPlayer instantly during a show to check market pricing. This opens TCGPlayer's own search results in a new tab - this app doesn't have TCGPlayer API/developer access to embed live results directly inside the app yet.</p>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="cardSearchInput" placeholder="e.g. Charizard VMAX, Blue-Eyes White Dragon" style="flex:1;min-width:0">
+      </div>
+      <button class="btn" id="cardSearchBtn" style="margin-top:10px;width:100%">🔍 Search TCGPlayer</button>
+    </div>
+  </div>
+
   <!-- RECONCILE -->
   <div class="screen" id="screen-reconcile">
     <div class="card">
@@ -422,9 +434,9 @@
       <button class="btn" id="archiveBtn" style="margin-top:10px;width:100%">Archive This Show to Reserve Fund + Reset Live Tracker</button>
     </div>
 
-    <div class="card" id="collectrCard" style="display:none">
+    <div class="card" id="collectrCard">
       <h2>Market Value Check</h2>
-      <p class="muted">Optional. Compare what you sold for on Whatnot against Collectr's market value for each person's portfolio. Purely informational - doesn't affect payouts or the reserve.</p>
+      <p class="muted">Optional. Compare what you sold for on Whatnot against Collectr's market value for each person's portfolio. Purely informational - doesn't affect payouts or the reserve. Works before or after you calculate Whatnot totals above.</p>
       <div class="row" style="margin-top:8px">
         <div style="flex:1;min-width:140px">
           <label>Person</label>
@@ -589,6 +601,10 @@
   <button data-screen="live">
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M7.5 7.5a6.5 6.5 0 000 9M16.5 7.5a6.5 6.5 0 010 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     <span>Live</span>
+  </button>
+  <button data-screen="search">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-4.8-4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Search</span>
   </button>
   <button data-screen="reconcile">
     <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -813,6 +829,17 @@ function connectRoom(roomCode) {
     updateSyncStatus("on");
   }, () => updateSyncStatus("error"));
 }
+
+// ---------- Card Price Search ----------
+function openTcgSearch() {
+  const q = document.getElementById("cardSearchInput").value.trim();
+  if (!q) return;
+  window.open("https://www.tcgplayer.com/search/all/product?q=" + encodeURIComponent(q), "_blank");
+}
+document.getElementById("cardSearchBtn").addEventListener("click", openTcgSearch);
+document.getElementById("cardSearchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); openTcgSearch(); }
+});
 
 // ---------- Nav ----------
 document.querySelectorAll("nav#bottomNav button").forEach(btn => {
@@ -1118,7 +1145,6 @@ document.getElementById("reconcileBtn").addEventListener("click", () => {
   document.getElementById("collectrMappingRow").style.display = "none";
   document.getElementById("collectrParseMsg").textContent = "";
   document.getElementById("collectrPerson").innerHTML = data.people.map(p => `<option value="${p.name}">${p.name}</option>`).join("");
-  document.getElementById("collectrCard").style.display = "block";
 });
 
 // ---------- Collectr Market Value Check ----------
@@ -1215,8 +1241,8 @@ document.getElementById("archiveBtn").addEventListener("click", () => {
     document.getElementById("csvInput").value = "";
     document.getElementById("mappingCard").style.display = "none";
     document.getElementById("resultsCard").style.display = "none";
-    document.getElementById("collectrCard").style.display = "none";
     collectrTotals = {};
+    document.getElementById("collectrResults").innerHTML = "";
     document.getElementById("parseMsg").textContent = "Archived. Live tracker reset for next show.";
   });
 });
@@ -1451,6 +1477,7 @@ function renderHistory() {
 renderSetup();
 renderLive();
 renderHeaderStats();
+document.getElementById("collectrPerson").innerHTML = data.people.map(p => `<option value="${p.name}">${p.name}</option>`).join("");
 if (currentRoomCode) connectRoom(currentRoomCode);
 
 if ("serviceWorker" in navigator) {
