@@ -869,6 +869,13 @@ const TCG_SET_ALIASES = {
   "eevee grove": [24380],
   "mega evolution": [24380]
 };
+// Nicknames the hobby uses that don't literally appear in the official card/set name.
+// Add more here any time you hit one - "nickname": "real card or set name words".
+const CARD_NICKNAMES = {
+  "treekachu": "ascended heroes pikachu"
+};
+
+const tcgSetCache = {}; // { catId: [{id, name, ...}] } - fetched once per category per session
 
 async function tcgFetchJson(url) {
   try {
@@ -886,65 +893,89 @@ function tcgTitleCaseFromSlug(slug) {
     .join(" ");
 }
 
-function tcgWordSlices(query) {
-  const words = query.trim().split(/\s+/).filter(Boolean);
-  const slices = [];
-  for (let len = words.length; len >= 1; len--) slices.push(words.slice(0, len).join(" "));
-  return slices;
+function tcgExpandNicknames(query) {
+  let expanded = query.toLowerCase();
+  for (const nick in CARD_NICKNAMES) {
+    if (expanded.includes(nick)) expanded = expanded.split(nick).join(CARD_NICKNAMES[nick]);
+  }
+  return expanded;
+}
+
+// Tolerant word match: exact substring, OR a shared 4-5 char prefix (catches typos like
+// "heroed" vs "heroes", and naturally handles partial words like "ascend" vs "ascended"
+// since that's already a prefix/substring match).
+function tcgFuzzyWordMatch(nameLower, queryWord) {
+  if (!queryWord) return true;
+  if (nameLower.includes(queryWord)) return true;
+  const prefixLen = Math.min(queryWord.length, 5);
+  if (prefixLen < 3) return false;
+  const prefix = queryWord.slice(0, prefixLen);
+  return nameLower.split(/\s+/).some(w => w.startsWith(prefix));
+}
+
+async function tcgGetSetsForCategory(catId) {
+  if (tcgSetCache[catId]) return tcgSetCache[catId];
+  const data = await tcgFetchJson(`${TCG_API_BASE}/${catId}/sets`);
+  const sets = (data && data.sets) || [];
+  tcgSetCache[catId] = sets;
+  return sets;
 }
 
 function tcgScoreSetName(setName, queryWords) {
   const nameLower = (setName || "").toLowerCase();
-  return queryWords.filter(w => nameLower.includes(w.toLowerCase())).length;
+  return queryWords.filter(w => tcgFuzzyWordMatch(nameLower, w)).length;
 }
 
-async function tcgFindBestSet(catId, query) {
-  const queryLower = query.toLowerCase().trim();
+async function tcgFindCandidateSets(catId, expandedQuery) {
+  const queryLower = expandedQuery.trim();
   for (const alias in TCG_SET_ALIASES) {
-    if (queryLower.includes(alias)) return { ids: TCG_SET_ALIASES[alias], name: alias };
+    if (queryLower.includes(alias)) return TCG_SET_ALIASES[alias].map(id => ({ id, name: alias }));
   }
-  const queryWords = query.trim().split(/\s+/).filter(Boolean);
-  for (const slice of tcgWordSlices(query)) {
-    const data = await tcgFetchJson(`${TCG_API_BASE}/${catId}/search?q=${encodeURIComponent(slice)}`);
-    if (!data) continue;
-    const sets = Array.isArray(data) ? data : (data.results || data.sets || (data.id ? [data] : []));
-    if (sets.length) {
-      const scored = sets.map(s => ({ s, score: tcgScoreSetName(s.name, queryWords) }));
-      scored.sort((a, b) => b.score - a.score);
-      return { ids: [scored[0].s.id], name: scored[0].s.name || "" };
-    }
-  }
-  return { ids: [], name: "" };
+  const queryWords = queryLower.split(/\s+/).filter(Boolean);
+  const sets = await tcgGetSetsForCategory(catId);
+  if (!sets.length) return [];
+  // Score every known set locally (fuzzy) instead of relying on the API's own search endpoint,
+  // so partial words and minor typos still find the right set even if their search wouldn't.
+  const scored = sets.map(s => ({ s, score: tcgScoreSetName(s.name, queryWords) }));
+  scored.sort((a, b) => b.score - a.score);
+  const topScore = scored[0] ? scored[0].score : 0;
+  if (!topScore) return [];
+  // Pokemon/card names essentially never appear in a set's own title, so a query like "ascend
+  // pikachu" ties between the real set (matches "ascend") and an unrelated set that just
+  // happens to have "pikachu" in ITS name (e.g. a promo box). Rather than guess, search across
+  // every tied set and let the product-level name filter sort out which one actually has the card.
+  return scored.filter(x => x.score === topScore).slice(0, 5).map(x => ({ id: x.s.id, name: x.s.name || "" }));
 }
 
 async function searchProducts(query, game) {
   const catId = TCG_GAME_IDS[(game || "").toLowerCase()];
   if (!catId || !query) return [];
-  const { ids: setIds, name: setName } = await tcgFindBestSet(catId, query);
-  if (!setIds.length) return [];
-  const queryWords = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const setNameLower = (setName || "").toLowerCase();
-  // Match only on words NOT already part of the matched set's name (e.g. "charizard" out of
-  // "surging sparks charizard"), so we don't loosely match every product in the set just
-  // because the set name words appear in every product title. If the whole query was just
-  // the set name, fall back to showing the full set.
-  const distinguishingWords = queryWords.filter(w => !setNameLower.includes(w));
-  const wordsToMatch = distinguishingWords.length ? distinguishingWords : queryWords;
+  const expandedQuery = tcgExpandNicknames(query);
+  const candidateSets = await tcgFindCandidateSets(catId, expandedQuery);
+  if (!candidateSets.length) return [];
+  const queryWords = expandedQuery.trim().split(/\s+/).filter(Boolean);
 
   let allProducts = [];
-  for (const setId of setIds) {
-    const setData = await tcgFetchJson(`${TCG_API_BASE}/${catId}/sets/${setId}`);
+  for (const set of candidateSets) {
+    // Compute distinguishing words per-set (not globally) - each candidate set gets words
+    // stripped relative to ITS OWN name, so e.g. "pikachu" survives for "Ascended Heroes"
+    // (doesn't mention pikachu) but gets correctly stripped for "Pikachu World Collection
+    // Promos" (where it's just part of that set's own title, not a useful product filter there).
+    const setNameLower = (set.name || "").toLowerCase();
+    const distinguishingWords = queryWords.filter(w => !tcgFuzzyWordMatch(setNameLower, w));
+    const wordsToMatch = distinguishingWords.length ? distinguishingWords : queryWords;
+    const setData = await tcgFetchJson(`${TCG_API_BASE}/${catId}/sets/${set.id}`);
     const products = (setData && setData.products) || [];
-    allProducts = allProducts.concat(products.map(p => ({
-      productId: p.productId || p.product_id || p.id,
-      name: p.name || p.cleanName || p.clean_name || "",
-      imageUrl: p.image_url || p.imageUrl || ""
-    })));
+    const matched = products
+      .map(p => ({
+        productId: p.productId || p.product_id || p.id,
+        name: p.name || p.cleanName || p.clean_name || "",
+        imageUrl: p.image_url || p.imageUrl || ""
+      }))
+      .filter(p => wordsToMatch.every(w => tcgFuzzyWordMatch(p.name.toLowerCase(), w)));
+    allProducts = allProducts.concat(matched);
   }
-  return allProducts.filter(p => {
-    const nameLower = p.name.toLowerCase();
-    return wordsToMatch.every(w => nameLower.includes(w));
-  });
+  return allProducts;
 }
 
 async function getProductPriceById(productId) {
@@ -987,34 +1018,32 @@ async function runCardSearch() {
     statusEl.textContent = "No matches found in the cache. Try Cross-Check below.";
     return;
   }
-  const candidates = products.slice(0, 30);
-  statusEl.textContent = `${products.length} match(es) - fetching prices...`;
+  // Alphabetical, not price-sorted - an expensive card you're actually selling shouldn't get
+  // buried at the bottom of the list.
+  products.sort((a, b) => a.name.localeCompare(b.name));
+  const top = products.slice(0, 10);
+  statusEl.textContent = `${products.length} match(es) - showing ${top.length}. Fetching prices...`;
+  listEl.innerHTML = top.map(p => `
+    <div class="list-row" data-pid="${p.productId}">
+      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:42px;object-fit:cover;border-radius:4px;flex-shrink:0" loading="lazy">` : `<div style="width:30px;flex-shrink:0"></div>`}
+      <span style="flex:1;min-width:0;font-size:13px;font-weight:600">${p.name}</span>
+      <span class="muted price-cell" style="flex-shrink:0;font-size:13px">…</span>
+    </div>`).join("");
 
-  const priced = await Promise.all(candidates.map(async (p) => ({ ...p, price: await getProductPriceById(p.productId) })));
-
-  // No real "units sold" data is exposed by this API, so we sort by price ascending as the best
-  // available proxy - cheap/common variants generally move in far higher volume than expensive
-  // chase versions, so this tends to surface the "normal" card instead of a rare pull burying it.
-  priced.sort((a, b) => {
-    const aHas = a.price.success && !isNaN(a.price.marketPrice);
-    const bHas = b.price.success && !isNaN(b.price.marketPrice);
-    if (aHas && bHas) return a.price.marketPrice - b.price.marketPrice;
-    if (aHas) return -1;
-    if (bHas) return 1;
-    return 0;
-  });
-
-  const top = priced.slice(0, 10);
-  statusEl.textContent = `${products.length} match(es) - showing ${top.length}, cheapest first.`;
-  listEl.innerHTML = top.map(item => {
-    const hasPrice = item.price.success && !isNaN(item.price.marketPrice);
-    const priceText = hasPrice ? `$${item.price.marketPrice.toFixed(2)}` : "n/a";
-    return `<div class="list-row">
-      ${item.imageUrl ? `<img src="${item.imageUrl}" style="width:30px;height:42px;object-fit:cover;border-radius:4px;flex-shrink:0" loading="lazy">` : `<div style="width:30px;flex-shrink:0"></div>`}
-      <span style="flex:1;min-width:0;font-size:13px;font-weight:600">${item.name}</span>
-      <span style="flex-shrink:0;font-size:13px;${hasPrice ? "color:var(--accent);font-weight:700" : "color:var(--muted)"}">${priceText}</span>
-    </div>`;
-  }).join("");
+  await Promise.all(top.map(async (p) => {
+    const price = await getProductPriceById(p.productId);
+    const cell = listEl.querySelector(`[data-pid="${p.productId}"] .price-cell`);
+    if (!cell) return;
+    if (price.success && !isNaN(price.marketPrice)) {
+      cell.textContent = `$${price.marketPrice.toFixed(2)}`;
+      cell.style.color = "var(--accent)";
+      cell.style.fontWeight = "700";
+      cell.classList.remove("muted");
+    } else {
+      cell.textContent = "n/a";
+    }
+  }));
+  statusEl.textContent = `${products.length} match(es) - showing ${top.length}.`;
 }
 
 document.getElementById("searchGoBtn").addEventListener("click", runCardSearch);
