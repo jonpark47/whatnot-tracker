@@ -6,72 +6,59 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Whatnot Tracker">
-<meta name="theme-color" content="#0f0e17">
+<meta name="theme-color" content="#000000">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <title>Whatnot Group Sales Tracker</title>
 <style>
   :root {
-    --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
   }
   :root[data-theme="dark"] {
-    --bg: #0f0e17;
-    --bg-glow: radial-gradient(circle at 15% -5%, rgba(139,92,246,.35) 0%, rgba(15,14,23,0) 42%),
-               radial-gradient(circle at 100% 8%, rgba(236,72,153,.24) 0%, rgba(15,14,23,0) 38%),
-               radial-gradient(circle at 25% 85%, rgba(139,92,246,.16) 0%, rgba(15,14,23,0) 45%);
-    --glass: rgba(32,30,46,.55);
-    --glass-strong: rgba(38,36,54,.75);
+    --bg: #000000;
+    --bg-glow: radial-gradient(circle at 15% -5%, rgba(var(--accent-rgb),.30) 0%, rgba(0,0,0,0) 42%),
+               radial-gradient(circle at 100% 10%, rgba(var(--accent-rgb),.16) 0%, rgba(0,0,0,0) 38%),
+               radial-gradient(circle at 30% 90%, rgba(var(--accent-rgb),.10) 0%, rgba(0,0,0,0) 45%);
+    --accent-rgb: 10,132,255;
+    --glass: rgba(28,28,30,.6);
+    --glass-strong: rgba(44,44,46,.78);
     --glass-border: rgba(255,255,255,.14);
-    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,0) 45%);
-    --panel2: rgba(255,255,255,.06);
-    --border: rgba(255,255,255,.12);
-    --text: #f5f3fa;
-    --muted: #a29db8;
-    --accent: #8b5cf6;
-    --accent2: #ec4899;
-    --accent-grad: linear-gradient(135deg, #8b5cf6, #ec4899);
-    --accent-ring: rgba(139,92,246,.28);
-    --gold: #f4b942;
-    --good: #2dd4bf;
-    --danger: #fb7185;
-    --danger-grad: linear-gradient(135deg, #fb7185, #e11d48);
-    --shadow: 0 14px 34px rgba(0,0,0,.42);
-    --shadow-sm: 0 6px 16px rgba(0,0,0,.32);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
+    --panel2: rgba(255,255,255,.07);
+    --border: rgba(255,255,255,.13);
+    --text: #ffffff;
+    --muted: rgba(235,235,245,.6);
+    --good: #30d158;
+    --danger: #ff453a;
+    --shadow: 0 14px 34px rgba(0,0,0,.5);
+    --shadow-sm: 0 6px 16px rgba(0,0,0,.4);
   }
   :root[data-theme="light"] {
-    --bg: #eef0fb;
-    --bg-glow: radial-gradient(circle at 15% -5%, rgba(124,58,237,.24) 0%, rgba(238,240,251,0) 42%),
-               radial-gradient(circle at 100% 8%, rgba(219,39,119,.16) 0%, rgba(238,240,251,0) 38%),
-               radial-gradient(circle at 25% 85%, rgba(124,58,237,.12) 0%, rgba(238,240,251,0) 45%);
-    --glass: rgba(255,255,255,.55);
-    --glass-strong: rgba(255,255,255,.78);
-    --glass-border: rgba(255,255,255,.7);
-    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.75), rgba(255,255,255,0) 45%);
-    --panel2: rgba(124,58,237,.055);
-    --border: rgba(124,58,237,.14);
-    --text: #221f30;
-    --muted: #756f8a;
-    --accent: #7c3aed;
-    --accent2: #db2777;
-    --accent-grad: linear-gradient(135deg, #7c3aed, #db2777);
-    --accent-ring: rgba(124,58,237,.20);
-    --gold: #b8860b;
-    --good: #0d9488;
-    --danger: #e11d48;
-    --danger-grad: linear-gradient(135deg, #fb7185, #e11d48);
-    --shadow: 0 14px 34px rgba(124,58,237,.16);
-    --shadow-sm: 0 6px 16px rgba(124,58,237,.12);
+    --bg: #f2f2f7;
+    --bg-glow: radial-gradient(circle at 15% -5%, rgba(var(--accent-rgb),.22) 0%, rgba(242,242,247,0) 42%),
+               radial-gradient(circle at 100% 10%, rgba(var(--accent-rgb),.12) 0%, rgba(242,242,247,0) 38%),
+               radial-gradient(circle at 30% 90%, rgba(var(--accent-rgb),.08) 0%, rgba(242,242,247,0) 45%);
+    --accent-rgb: 0,122,255;
+    --glass: rgba(255,255,255,.6);
+    --glass-strong: rgba(255,255,255,.8);
+    --glass-border: rgba(255,255,255,.75);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.65), rgba(255,255,255,0) 45%);
+    --panel2: rgba(60,60,67,.06);
+    --border: rgba(60,60,67,.13);
+    --text: #000000;
+    --muted: rgba(60,60,67,.6);
+    --good: #34c759;
+    --danger: #ff3b30;
+    --shadow: 0 14px 34px rgba(0,0,0,.12);
+    --shadow-sm: 0 6px 16px rgba(0,0,0,.08);
   }
+  :root { --accent: rgb(var(--accent-rgb)); --accent-ring: rgba(var(--accent-rgb),.28); }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { overflow-x: hidden; }
   body {
     margin: 0;
-    font-family: var(--font-body);
+    font-family: var(--font-system);
     background: var(--bg-glow), var(--bg);
     background-attachment: fixed;
     color: var(--text);
@@ -81,45 +68,39 @@
   }
   header {
     padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
-    position: sticky;
-    top: 0;
-    z-index: 20;
+    position: sticky; top: 0; z-index: 20;
     background: var(--glass);
     backdrop-filter: blur(26px) saturate(180%);
     -webkit-backdrop-filter: blur(26px) saturate(180%);
     border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .brand-mark {
-    flex-shrink: 0;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--accent-grad);
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-display); font-weight: 700; color: #fff; font-size: 16px;
+    font-weight: 700; color: #fff; font-size: 15px;
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.4);
   }
   .brand-text { min-width: 0; }
   header h1 {
-    margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 600;
-    letter-spacing: -.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .theme-toggle {
-    flex-shrink: 0;
-    width: 40px; height: 40px; border-radius: 50%;
+  .icon-btn-round {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%;
     background: var(--glass-strong);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); color: var(--text);
-    font-size: 17px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--glass-border); color: var(--accent);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.3), var(--shadow-sm);
     transition: transform .15s ease;
   }
-  .theme-toggle:active { transform: scale(.88) rotate(15deg); }
-  .header-stats { display: flex; gap: 14px; margin-top: 4px; font-size: 11px; color: var(--muted); }
-  .header-stats b { color: var(--text); font-family: var(--font-display); font-weight: 600; }
+  .icon-btn-round:active { transform: scale(.88); }
+  .icon-btn-round svg { width: 19px; height: 19px; }
+  .header-stats { display: flex; gap: 14px; margin-top: 3px; font-size: 12px; color: var(--muted); }
+  .header-stats b { color: var(--text); font-weight: 600; }
   main { padding: 18px 14px calc(112px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
   .screen { display: none; }
   .screen.active { display: block; animation: fadeIn .3s ease; }
@@ -129,72 +110,67 @@
     backdrop-filter: blur(22px) saturate(160%);
     -webkit-backdrop-filter: blur(22px) saturate(160%);
     border: 1px solid var(--glass-border);
-    border-radius: 28px;
-    padding: 18px;
-    margin-bottom: 16px;
+    border-radius: 22px;
+    padding: 16px;
+    margin-bottom: 14px;
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
   }
-  .card::before {
-    content: ""; position: absolute; inset: 0; background: var(--glass-sheen); pointer-events: none;
-  }
+  .card::before { content: ""; position: absolute; inset: 0; background: var(--glass-sheen); pointer-events: none; }
   .card > * { position: relative; }
-  .card h2 { margin-top: 0; font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -.1px; }
+  .card h2 { margin-top: 0; font-size: 17px; font-weight: 600; letter-spacing: -.2px; }
   details.card summary {
-    cursor: pointer; font-family: var(--font-display); font-weight: 600; font-size: 15px;
+    cursor: pointer; font-weight: 600; font-size: 17px;
     list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px;
     position: relative;
   }
   details.card summary::-webkit-details-marker { display: none; }
-  details.card summary::after { content: "▾"; color: var(--muted); font-family: var(--font-body); font-size: 13px; transition: transform .2s ease; flex-shrink: 0; }
+  details.card summary::after { content: "▾"; color: var(--muted); font-size: 13px; font-weight: 400; transition: transform .2s ease; flex-shrink: 0; }
   details.card[open] summary::after { transform: rotate(180deg); }
-  .setup-hero { text-align: center; padding: 10px 8px 22px; }
+  .setup-hero { text-align: center; padding: 6px 8px 20px; }
   .setup-hero-mark {
-    width: 60px; height: 60px; margin: 0 auto 12px; border-radius: 50%;
-    background: var(--accent-grad); display: flex; align-items: center; justify-content: center;
+    width: 58px; height: 58px; margin: 0 auto 12px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
     font-size: 26px; box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.4);
   }
-  .setup-hero-title { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.3px; }
-  .setup-hero-sub { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+  .setup-hero-title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.4px; }
+  .setup-hero-sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
   .btn-cta {
-    width: 100%; font-size: 16px; padding: 16px 18px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; font-size: 17px; padding: 15px 18px; display: flex; align-items: center; justify-content: center; gap: 8px;
     box-shadow: 0 12px 28px var(--accent-ring), inset 0 1px 0 rgba(255,255,255,.35);
   }
   .btn-cta-icon { font-size: 12px; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; font-weight: 500; }
+  .accent-picker { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .accent-swatch {
+    width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 2px 6px rgba(0,0,0,.25);
+    transition: transform .12s ease;
+  }
+  .accent-swatch:active { transform: scale(.88); }
+  .accent-swatch.selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text), inset 0 1px 0 rgba(255,255,255,.4); }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 10px; font-weight: 500; }
   input[type=text], input[type=number], select {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 999px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
+    width: 100%; padding: 12px 16px; border-radius: 999px;
+    border: 1px solid var(--glass-border); background: var(--glass);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    color: var(--text);
-    font-size: 14px;
-    font-family: var(--font-body);
+    color: var(--text); font-size: 15px; font-family: var(--font-system);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 22px;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
-    color: var(--text);
-    font-size: 14px;
-    font-family: var(--font-body);
+    width: 100%; padding: 12px 16px; border-radius: 20px; min-height: 130px;
+    border: 1px solid var(--glass-border); background: var(--glass);
+    color: var(--text); font-size: 12px; font-family: ui-monospace, monospace;
   }
   input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
     outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring);
   }
-  textarea { min-height: 130px; font-family: monospace; font-size: 12px; border-radius: 20px; }
-  input[type=color] { width: 44px; height: 40px; padding: 2px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); flex-shrink: 0; overflow: hidden; }
+  input[type=color] { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); flex-shrink: 0; overflow: hidden; }
   .ghost-input, .ghost-input-sm {
     border: none !important; background: transparent !important; padding: 3px 4px !important;
-    color: var(--text); font-size: 13px; width: auto !important; border-radius: 6px !important;
+    color: var(--text); font-size: 14px; width: auto !important; border-radius: 6px !important;
   }
-  .ghost-input-sm { font-size: 11px; color: var(--muted); }
+  .ghost-input-sm { font-size: 12px; color: var(--muted); }
   .ghost-input:focus, .ghost-input-sm:focus {
     outline: none; background: var(--glass-strong) !important; border: 1px solid var(--glass-border) !important;
     border-radius: 999px !important; box-shadow: 0 0 0 2px var(--accent-ring);
@@ -204,20 +180,32 @@
   th { color: var(--muted); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; }
   tbody tr { transition: background-color .12s ease; }
   tbody tr:hover { background: var(--panel2); }
-  .roster-person { background: var(--panel2); border-radius: 20px; border-left: 4px solid var(--border); padding: 12px 14px; margin-bottom: 10px; }
-  .roster-person-sub { display: flex; gap: 10px; align-items: flex-end; margin-top: 8px; }
-  .roster-name-input { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+
+  .ios-group { background: var(--panel2); border-radius: 16px; overflow: hidden; }
+  .ios-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 12px 14px; border-bottom: 1px solid var(--border); min-height: 22px;
+  }
+  .ios-row:last-child { border-bottom: none; }
+  .ios-row-label { font-size: 15px; color: var(--text); flex-shrink: 0; }
+  .ios-row input[type=text], .ios-row input[type=number] {
+    border: none; background: transparent; padding: 0; text-align: right;
+    width: auto; flex: 1; font-size: 15px; color: var(--text);
+  }
+  .ios-row input[type=text]:focus, .ios-row input[type=number]:focus { box-shadow: none; }
+
+  .roster-person { background: var(--panel2); border-radius: 16px; border-left: 4px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+
+  .ios-toggle { position: relative; display: inline-block; width: 51px; height: 31px; flex-shrink: 0; }
+  .ios-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .ios-toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background-color .2s ease; cursor: pointer; }
+  .ios-toggle input:checked + .ios-toggle-track { background: var(--good); }
+  .ios-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; background: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,.3); transition: transform .2s ease; }
+  .ios-toggle input:checked + .ios-toggle-track .ios-toggle-thumb { transform: translateX(20px); }
+
   .btn {
-    background: var(--accent-grad);
-    color: #fff;
-    border: none;
-    padding: 13px 20px;
-    border-radius: 999px;
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    font-family: var(--font-body);
-    letter-spacing: .1px;
+    background: var(--accent); color: #fff; border: none; padding: 13px 20px; border-radius: 999px;
+    font-size: 15px; cursor: pointer; font-weight: 600; font-family: var(--font-system); letter-spacing: 0;
     box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.3);
     transition: transform .1s ease, box-shadow .1s ease;
   }
@@ -225,61 +213,54 @@
   .btn.secondary {
     background: var(--glass-strong);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); color: var(--text);
+    border: 1px solid var(--glass-border); color: var(--accent);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
   }
-  .btn.danger { background: var(--danger-grad); }
+  .btn.danger { background: var(--danger); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .link-danger { background: none; border: none; color: var(--danger); font-size: 12px; text-decoration: underline; cursor: pointer; font-family: var(--font-body); padding: 6px; }
+  .link-danger { background: none; border: none; color: var(--danger); font-size: 13px; cursor: pointer; font-family: var(--font-system); padding: 6px; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .next-num-row { display: flex; align-items: center; justify-content: center; gap: 14px; }
   .icon-btn {
     flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
     background: var(--glass-strong);
     backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); color: var(--text);
-    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--glass-border); color: var(--accent);
+    font-size: 19px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.3), var(--shadow-sm);
   }
   .icon-btn:active { transform: scale(.9); }
   .icon-btn-sm {
     flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
     background: var(--panel2); border: 1px solid var(--border); color: var(--danger);
-    font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
+  .icon-btn-sm svg { width: 14px; height: 14px; }
   .next-num { text-align: center; }
-  .next-num span:first-child { color: var(--muted); font-size: 11px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
-  .next-num span:last-child {
-    font-family: var(--font-display); font-size: 46px; font-weight: 700;
-    background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
-    display: inline-block;
-  }
+  .next-num span:first-child { color: var(--muted); font-size: 12px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; }
+  .next-num span:last-child { font-size: 48px; font-weight: 700; color: var(--accent); display: inline-block; letter-spacing: -1px; }
   @keyframes popNum { 0% { transform: scale(1); } 45% { transform: scale(1.16); } 100% { transform: scale(1); } }
   .pop { animation: popNum .35s ease; }
   .tap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
   @media (min-width: 480px) { .tap-grid { grid-template-columns: repeat(4, 1fr); } }
   .tap-btn {
-    border: none;
-    border-radius: 28px;
-    padding: 22px 6px;
+    border: none; border-radius: 24px; padding: 22px 6px;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
-    color: #fff;
-    cursor: pointer;
+    color: #fff; cursor: pointer;
     background-image: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 55%);
     box-shadow: 0 10px 22px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.4);
-    transition: transform .1s ease;
-    min-height: 84px;
+    transition: transform .1s ease; min-height: 84px;
   }
-  .tap-name { font-size: 16px; font-weight: 700; font-family: var(--font-display); text-shadow: 0 1px 3px rgba(0,0,0,.35); }
-  .tap-meta { font-size: 10.5px; font-weight: 600; opacity: .9; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .tap-name { font-size: 16px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+  .tap-meta { font-size: 11px; font-weight: 600; opacity: .9; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; margin-top: 12px; }
-  .stat-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 20px; padding: 12px 8px; text-align: center; }
-  .stat-box .num { font-family: var(--font-display); font-size: 21px; font-weight: 700; }
-  .stat-box .lbl { font-size: 10.5px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .3px; }
+  .stat-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 16px; padding: 12px 8px; text-align: center; }
+  .stat-box .num { font-size: 21px; font-weight: 700; }
+  .stat-box .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .flag-bad { color: var(--danger); font-weight: 700; }
   .flag-ok { color: var(--good); }
   .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-  .muted { color: var(--muted); font-size: 12px; }
+  .muted { color: var(--muted); font-size: 13px; }
   .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: middle; flex-shrink: 0; }
 
   .mini-list { margin-top: 8px; }
@@ -295,20 +276,20 @@
   .expense-main .exp-desc { display: block; font-weight: 600; }
   .expense-sub { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 3px; }
   .expense-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-  .ghost-input-amount { width: 74px !important; text-align: right; font-weight: 700; font-family: var(--font-display); font-size: 14px !important; }
+  .ghost-input-amount { width: 74px !important; text-align: right; font-weight: 700; font-size: 15px !important; }
 
-  .result-card { background: var(--panel2); border-left: 4px solid var(--border); border-radius: 20px; padding: 12px 14px; margin-bottom: 10px; }
+  .result-card { background: var(--panel2); border-left: 4px solid var(--border); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; }
   .result-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .result-name { font-family: var(--font-display); font-weight: 600; font-size: 14px; display: flex; align-items: center; }
-  .result-take { font-family: var(--font-display); font-size: 19px; font-weight: 700; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; flex-shrink: 0; }
-  .result-sub { font-size: 12.5px; margin-top: 4px; }
-  .result-breakdown { font-size: 11px; margin-top: 3px; }
+  .result-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; }
+  .result-take { font-size: 19px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .result-sub { font-size: 13px; margin-top: 4px; }
+  .result-breakdown { font-size: 11.5px; margin-top: 3px; }
 
   .history-item { border-bottom: 1px solid var(--border); padding: 10px 2px; }
   .history-item:last-child { border-bottom: none; }
   .history-item summary { cursor: pointer; list-style: none; }
   .history-item summary::-webkit-details-marker { display: none; }
-  .history-head { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; }
+  .history-head { display: flex; justify-content: space-between; align-items: center; font-size: 14.5px; }
   .history-detail-list { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); }
 
   nav#bottomNav {
@@ -320,21 +301,36 @@
     backdrop-filter: blur(30px) saturate(180%);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
     border: 1px solid var(--glass-border);
-    border-radius: 999px;
-    padding: 8px 6px;
+    border-radius: 999px; padding: 8px 6px;
     box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.3);
   }
   nav#bottomNav button {
     flex: 1; max-width: 100px;
     display: flex; flex-direction: column; align-items: center; gap: 2px;
     background: none; border: none; color: var(--muted);
-    font-family: var(--font-body); font-size: 10px; font-weight: 600;
+    font-family: var(--font-system); font-size: 10px; font-weight: 600;
     padding: 7px 4px; border-radius: 999px; cursor: pointer;
     transition: color .15s ease, background-color .15s ease;
   }
-  nav#bottomNav button .nav-icon { font-size: 19px; line-height: 1; transition: transform .15s ease; }
+  nav#bottomNav button svg { width: 22px; height: 22px; transition: transform .15s ease; }
   nav#bottomNav button.active { color: var(--accent); background: var(--accent-ring); }
-  nav#bottomNav button.active .nav-icon { transform: translateY(-1px) scale(1.1); }
+  nav#bottomNav button.active svg { transform: translateY(-1px) scale(1.08); }
+
+  #confirmOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .ios-alert {
+    width: 270px; background: var(--glass-strong);
+    backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border); border-radius: 14px; overflow: hidden;
+    box-shadow: var(--shadow); text-align: center;
+  }
+  .ios-alert p { margin: 0; padding: 19px 16px 17px; font-size: 13px; line-height: 1.4; color: var(--text); }
+  .ios-alert-buttons { display: flex; border-top: 1px solid var(--border); }
+  .ios-alert-buttons button {
+    flex: 1; background: none; border: none; padding: 12px 8px; font-size: 17px;
+    color: var(--accent); cursor: pointer; font-family: var(--font-system);
+  }
+  .ios-alert-buttons button:first-child { border-right: 1px solid var(--border); }
+  .ios-alert-buttons button.destructive { color: var(--danger); font-weight: 600; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -350,8 +346,10 @@
     </div>
   </div>
   <div class="row" style="gap:8px;flex-wrap:nowrap">
-    <button class="theme-toggle" id="setupBtn" aria-label="Setup">⚙️</button>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    <button class="icon-btn-round" id="setupBtn" aria-label="Setup">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 12H2M22 12h-2.2M5.6 5.6l1.5 1.5M16.9 16.9l1.5 1.5M18.4 5.6l-1.5 1.5M7.1 16.9l-1.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <button class="icon-btn-round" id="themeToggle" aria-label="Toggle theme"></button>
   </div>
 </header>
 
@@ -361,9 +359,11 @@
   <div class="screen" id="screen-live">
     <div class="card">
       <div class="next-num-row">
-        <button class="icon-btn" id="undoBtn" title="Undo last tap">↩</button>
+        <button class="icon-btn" id="undoBtn" title="Undo last tap">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 8L3.5 11.5L7 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 11.5H15a5 5 0 010 10h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
         <div class="next-num"><span>Next Sale Number</span><span id="nextNumBig"></span></div>
-        <div style="width:42px"></div>
+        <div style="width:44px"></div>
       </div>
       <div class="tap-grid" id="tapGrid"></div>
       <p style="text-align:center;margin-top:12px;margin-bottom:0">
@@ -447,10 +447,13 @@
           </select>
         </div>
       </div>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer">
-        <input type="checkbox" id="expFromReserve" style="width:auto">
-        Fund this from the Reserve (giveaways/business expansion) instead of splitting among partners
-      </label>
+      <div class="ios-row" style="margin-top:14px;padding:10px 0">
+        <span class="ios-row-label" style="flex:1">Fund from Reserve <span class="muted" style="display:block;font-size:11.5px;margin-top:2px">Giveaways/business expansion, instead of splitting among partners</span></span>
+        <label class="ios-toggle">
+          <input type="checkbox" id="expFromReserve">
+          <span class="ios-toggle-track"><span class="ios-toggle-thumb"></span></span>
+        </label>
+      </div>
       <div id="splitFields">
         <div class="row" style="margin-top:6px">
           <div style="flex:1;min-width:160px">
@@ -469,7 +472,7 @@
 
     <div class="card">
       <h2>Balances</h2>
-      <p class="muted">Positive = this person is owed money. Negative = this person owes money. Reserve-funded expenses aren't included here (see Reserve Fund in More).</p>
+      <p class="muted">Positive = this person is owed money. Negative = this person owes money. Reserve-funded expenses aren't included here (see Reserve tab).</p>
       <div class="stat-grid" id="balanceStats"></div>
       <div id="settleUpBox" style="margin-top:12px"></div>
     </div>
@@ -486,6 +489,12 @@
       <div class="setup-hero-mark">🎬</div>
       <h2 class="setup-hero-title">Ready to sell?</h2>
       <p class="setup-hero-sub">Confirm your crew and room code below, then start the show.</p>
+    </div>
+
+    <div class="card">
+      <h2>Accent Color</h2>
+      <p class="muted">Tints buttons, highlights, and the background glow throughout the app.</p>
+      <div class="accent-picker" id="accentPicker"></div>
     </div>
 
     <details class="card">
@@ -521,23 +530,11 @@
         (5% for electronics, 4% for coins/currency - check your Seller Dashboard if you sell those) plus 2.9% + $0.30
         payment processing per order. Fees can change or vary by promo, so double check against your own payout
         statement and adjust here if needed.</p>
-      <div class="row">
-        <div style="flex:1;min-width:140px">
-          <label>Whatnot commission %</label>
-          <input type="number" id="feeWhatnot" step="0.1" min="0">
-        </div>
-        <div style="flex:1;min-width:140px">
-          <label>Payment processing %</label>
-          <input type="number" id="feeProcessing" step="0.1" min="0">
-        </div>
-        <div style="flex:1;min-width:140px">
-          <label>Processing fixed fee ($/order)</label>
-          <input type="number" id="feeProcessingFixed" step="0.01" min="0">
-        </div>
-        <div style="flex:1;min-width:140px">
-          <label>Reserve % (giveaways/growth)</label>
-          <input type="number" id="feeReserve" step="0.1" min="0">
-        </div>
+      <div class="ios-group" style="margin-top:10px">
+        <div class="ios-row"><span class="ios-row-label">Whatnot commission %</span><input type="number" id="feeWhatnot" step="0.1" min="0"></div>
+        <div class="ios-row"><span class="ios-row-label">Payment processing %</span><input type="number" id="feeProcessing" step="0.1" min="0"></div>
+        <div class="ios-row"><span class="ios-row-label">Processing fixed fee ($/order)</span><input type="number" id="feeProcessingFixed" step="0.01" min="0"></div>
+        <div class="ios-row"><span class="ios-row-label">Reserve %</span><input type="number" id="feeReserve" step="0.1" min="0"></div>
       </div>
     </details>
 
@@ -569,38 +566,92 @@
 </main>
 
 <nav id="bottomNav">
-  <button data-screen="live"><span class="nav-icon">🎯</span><span>Live</span></button>
-  <button data-screen="reconcile"><span class="nav-icon">🧾</span><span>Reconcile</span></button>
-  <button data-screen="expenses"><span class="nav-icon">🧺</span><span>Expenses</span></button>
-  <button data-screen="history"><span class="nav-icon">💰</span><span>Reserve</span></button>
+  <button data-screen="live">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M7.5 7.5a6.5 6.5 0 000 9M16.5 7.5a6.5 6.5 0 010 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Live</span>
+  </button>
+  <button data-screen="reconcile">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="3.5" width="14" height="17" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Reconcile</span>
+  </button>
+  <button data-screen="expenses">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 8.5h12l-1 11.5a2 2 0 01-2 1.8H9a2 2 0 01-2-1.8L6 8.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8.5V6.5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Expenses</span>
+  </button>
+  <button data-screen="history">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6.5" width="17" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/></svg>
+    <span>Reserve</span>
+  </button>
 </nav>
 
-<div id="confirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;">
-  <div class="card" style="max-width:340px;margin:16px;">
-    <p id="confirmMsg" style="margin-top:0"></p>
-    <div class="row" style="justify-content:flex-end">
-      <button class="btn secondary" id="confirmNo">Cancel</button>
-      <button class="btn danger" id="confirmYes">Confirm</button>
+<div id="confirmOverlay">
+  <div class="ios-alert">
+    <p id="confirmMsg"></p>
+    <div class="ios-alert-buttons">
+      <button id="confirmNo">Cancel</button>
+      <button id="confirmYes" class="destructive">Confirm</button>
     </div>
   </div>
 </div>
 
 <script>
-// ---------- Theme ----------
+// ---------- Theme + Accent (like iOS Home Screen tinting) ----------
+const ICON_SUN = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const ICON_MOON = '<svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" fill="currentColor"/></svg>';
+
+const ACCENT_COLORS = {
+  blue:   { name: "Blue",   light: "0,122,255",  dark: "10,132,255" },
+  purple: { name: "Purple", light: "175,82,222", dark: "191,90,242" },
+  pink:   { name: "Pink",   light: "255,45,85",  dark: "255,55,95" },
+  red:    { name: "Red",    light: "255,59,48",  dark: "255,69,58" },
+  orange: { name: "Orange", light: "255,149,0",  dark: "255,159,10" },
+  yellow: { name: "Yellow", light: "255,204,0",  dark: "255,214,10" },
+  green:  { name: "Green",  light: "52,199,89",  dark: "48,209,88" },
+  teal:   { name: "Teal",   light: "48,176,199", dark: "64,200,224" }
+};
+
 const THEME_KEY = "whatnotTheme";
+const ACCENT_KEY = "whatnotAccent";
+let currentTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+let currentAccent = localStorage.getItem(ACCENT_KEY) || "blue";
+
+function applyAccent(key) {
+  currentAccent = key;
+  localStorage.setItem(ACCENT_KEY, key);
+  document.documentElement.style.setProperty("--accent-rgb", ACCENT_COLORS[key][currentTheme]);
+}
+
+function renderAccentPicker() {
+  const el = document.getElementById("accentPicker");
+  if (!el) return;
+  el.innerHTML = Object.keys(ACCENT_COLORS).map(key =>
+    `<button class="accent-swatch ${key === currentAccent ? "selected" : ""}" data-accent="${key}"
+      style="background: rgb(${ACCENT_COLORS[key][currentTheme]})" aria-label="${ACCENT_COLORS[key].name}"></button>`
+  ).join("");
+}
+
 function applyTheme(theme) {
+  currentTheme = theme;
   document.documentElement.setAttribute("data-theme", theme);
   const btn = document.getElementById("themeToggle");
-  if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+  if (btn) btn.innerHTML = theme === "dark" ? ICON_MOON : ICON_SUN;
   const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if (metaTheme) metaTheme.setAttribute("content", theme === "dark" ? "#0f0e17" : "#faf9fd");
+  if (metaTheme) metaTheme.setAttribute("content", theme === "dark" ? "#000000" : "#f2f2f7");
+  applyAccent(currentAccent);
+  renderAccentPicker();
 }
-let currentTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
 applyTheme(currentTheme);
+
 document.getElementById("themeToggle").addEventListener("click", () => {
-  currentTheme = currentTheme === "dark" ? "light" : "dark";
-  localStorage.setItem(THEME_KEY, currentTheme);
-  applyTheme(currentTheme);
+  localStorage.setItem(THEME_KEY, currentTheme === "dark" ? "light" : "dark");
+  applyTheme(currentTheme === "dark" ? "light" : "dark");
+});
+
+document.getElementById("accentPicker").addEventListener("click", (e) => {
+  const btn = e.target.closest(".accent-swatch");
+  if (!btn) return;
+  applyAccent(btn.dataset.accent);
+  renderAccentPicker();
 });
 
 function showConfirm(message, onYes) {
@@ -757,14 +808,9 @@ function renderSetup() {
     row.className = "roster-person";
     row.style.borderLeftColor = p.color;
     row.innerHTML = `
-      <input type="text" data-idx="${i}" class="pname roster-name-input" value="${p.name}" autocomplete="off">
-      <div class="roster-person-sub">
-        <input type="color" data-idx="${i}" class="pcolor" value="${p.color}" autocomplete="off">
-        <div style="flex:1">
-          <label style="margin:0 0 2px">Cards brought this show</label>
-          <input type="number" data-idx="${i}" class="pbrought" min="0" value="${p.brought}" autocomplete="off">
-        </div>
-      </div>
+      <div class="ios-row"><span class="ios-row-label">Name</span><input type="text" data-idx="${i}" class="pname" value="${p.name}" autocomplete="off"></div>
+      <div class="ios-row"><span class="ios-row-label">Color</span><input type="color" data-idx="${i}" class="pcolor" value="${p.color}" autocomplete="off"></div>
+      <div class="ios-row"><span class="ios-row-label">Cards brought</span><input type="number" data-idx="${i}" class="pbrought" min="0" value="${p.brought}" autocomplete="off"></div>
     `;
     rosterEl.appendChild(row);
   });
@@ -861,7 +907,7 @@ function renderLog() {
       <span class="swatch" style="background:${colorMap[l.owner] || '#888'}"></span>
       <select class="log-owner ghost-input" data-idx="${i}" style="flex:1;min-width:0">${ownerOptions}</select>
       <span class="muted" style="flex-shrink:0;font-size:10.5px">${l.time}</span>
-      <button class="icon-btn-sm log-delete" data-idx="${i}">🗑</button>`;
+      <button class="icon-btn-sm log-delete" data-idx="${i}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
     body.appendChild(row);
   }
 }
@@ -879,8 +925,9 @@ document.getElementById("logBody").addEventListener("change", (e) => {
 });
 
 document.getElementById("logBody").addEventListener("click", (e) => {
-  if (!e.target.classList.contains("log-delete")) return;
-  const idx = parseInt(e.target.dataset.idx);
+  const delBtn = e.target.closest(".log-delete");
+  if (!delBtn) return;
+  const idx = parseInt(delBtn.dataset.idx);
   const entry = data.currentShow.log[idx];
   showConfirm(`Delete sale #${entry.number} (${entry.owner})? This can't be undone.`, () => {
     data.currentShow.log.splice(idx, 1);
@@ -1163,7 +1210,7 @@ function renderExpenseLog() {
       </div>
       <div class="expense-right">
         <input type="number" class="exp-amount ghost-input ghost-input-amount" data-idx="${idx}" value="${exp.amount}" step="0.01">
-        <button class="icon-btn-sm exp-delete" data-idx="${idx}">🗑</button>
+        <button class="icon-btn-sm exp-delete" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 13a1 1 0 001 1h6a1 1 0 001-1l1-13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>`;
     row.querySelector(".exp-cat").value = exp.category;
     body.appendChild(row);
@@ -1185,8 +1232,9 @@ document.getElementById("expenseBody").addEventListener("change", (e) => {
 });
 
 document.getElementById("expenseBody").addEventListener("click", (e) => {
-  if (!e.target.classList.contains("exp-delete")) return;
-  const idx = parseInt(e.target.dataset.idx);
+  const delBtn = e.target.closest(".exp-delete");
+  if (!delBtn) return;
+  const idx = parseInt(delBtn.dataset.idx);
   const exp = data.expenses[idx];
   showConfirm(`Delete expense "${exp.description}" ($${exp.amount.toFixed(2)})?`, () => {
     data.expenses.splice(idx, 1);
