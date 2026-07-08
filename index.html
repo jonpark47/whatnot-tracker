@@ -1207,7 +1207,8 @@ document.getElementById("archiveBtn").addEventListener("click", () => {
   showConfirm("Archive this show's reserve to the Reserve Fund tab and reset the live tracker for the next show? Do this only after you've recorded/paid out this show's numbers.", () => {
     data.history.push({
       date: new Date().toLocaleDateString(), totalNet: lastCalc.totalNet, reserve: lastCalc.totalReserve,
-      breakdown: lastCalcResults.map(r => ({ name: r.name, sold: r.sold, gross: r.gross, takeHome: r.takeHome }))
+      breakdown: lastCalcResults.map(r => ({ name: r.name, sold: r.sold, gross: r.gross, takeHome: r.takeHome })),
+      marketCheck: Object.keys(collectrTotals).length ? { ...collectrTotals } : null
     });
     data.currentShow = { nextNumber: 1, log: [] };
     save();
@@ -1409,10 +1410,21 @@ function renderHistory() {
       const el = document.createElement(hasBreakdown ? "details" : "div");
       el.className = "history-item";
       if (hasBreakdown) {
+        const marketHtml = h.marketCheck ? `
+            <p class="muted" style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border)">Market Value Check</p>
+            ${Object.keys(h.marketCheck).map(name => {
+              const b = h.breakdown.find(x => x.name === name);
+              const gross = b ? b.gross : 0;
+              const mkt = h.marketCheck[name];
+              const pct = mkt > 0 ? (gross / mkt * 100) : 0;
+              const cls = gross >= mkt ? "flag-ok" : "flag-bad";
+              return `<div class="list-row" style="border:none;padding:4px 0"><span style="flex:1">${name}</span><span class="muted" style="flex-shrink:0">$${gross.toFixed(2)} / $${mkt.toFixed(2)}</span><span class="${cls}" style="flex-shrink:0;font-weight:700">${pct.toFixed(0)}%</span></div>`;
+            }).join("")}` : "";
         el.innerHTML = `<summary>${headHtml}</summary>
           <div class="history-detail-list">
             ${h.breakdown.map(b => `<div class="list-row" style="border:none;padding:5px 0"><span style="flex:1">${b.name}</span><span class="muted" style="flex-shrink:0">${b.sold} sold</span><span style="flex-shrink:0;font-weight:700">$${b.takeHome.toFixed(2)}</span></div>`).join("")}
             <p class="muted" style="margin-top:6px">Total net profit this show: $${h.totalNet.toFixed(2)} · Cumulative reserve: $${cum.toFixed(2)}</p>
+            ${marketHtml}
           </div>`;
       } else {
         el.innerHTML = headHtml;
