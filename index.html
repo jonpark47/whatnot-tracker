@@ -421,6 +421,26 @@
       </div>
       <button class="btn" id="archiveBtn" style="margin-top:10px;width:100%">Archive This Show to Reserve Fund + Reset Live Tracker</button>
     </div>
+
+    <div class="card" id="collectrCard" style="display:none">
+      <h2>Market Value Check</h2>
+      <p class="muted">Optional. Compare what you sold for on Whatnot against Collectr's market value for each person's portfolio. Purely informational - doesn't affect payouts or the reserve.</p>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1;min-width:140px">
+          <label>Person</label>
+          <select id="collectrPerson"></select>
+        </div>
+      </div>
+      <textarea id="collectrInput" style="margin-top:10px" placeholder="Paste this person's Collectr portfolio export here..."></textarea>
+      <button class="btn secondary" id="collectrParseBtn" style="margin-top:10px">Parse Export</button>
+      <span class="muted" id="collectrParseMsg" style="margin-left:10px"></span>
+      <div id="collectrMappingRow" style="display:none;margin-top:10px">
+        <label>Which column is the market value?</label>
+        <select id="collectrValueCol"></select>
+        <button class="btn" id="collectrAddBtn" style="margin-top:10px;width:100%">Add to Comparison</button>
+      </div>
+      <div id="collectrResults" class="mini-list"></div>
+    </div>
   </div>
 
   <!-- EXPENSES -->
@@ -1091,7 +1111,79 @@ document.getElementById("reconcileBtn").addEventListener("click", () => {
   lastCalc = { totalNet, totalReserve };
   lastCalcResults = calcResults;
   document.getElementById("resultsCard").style.display = "block";
+
+  collectrTotals = {};
+  document.getElementById("collectrResults").innerHTML = "";
+  document.getElementById("collectrInput").value = "";
+  document.getElementById("collectrMappingRow").style.display = "none";
+  document.getElementById("collectrParseMsg").textContent = "";
+  document.getElementById("collectrPerson").innerHTML = data.people.map(p => `<option value="${p.name}">${p.name}</option>`).join("");
+  document.getElementById("collectrCard").style.display = "block";
 });
+
+// ---------- Collectr Market Value Check ----------
+let collectrParsedRows = null, collectrParsedHeader = null;
+let collectrTotals = {};
+
+document.getElementById("collectrParseBtn").addEventListener("click", () => {
+  const text = document.getElementById("collectrInput").value;
+  const rows = parseCSV(text);
+  const msg = document.getElementById("collectrParseMsg");
+  if (rows.length < 2) {
+    msg.textContent = "Couldn't find a header row + data rows.";
+    document.getElementById("collectrMappingRow").style.display = "none";
+    return;
+  }
+  collectrParsedHeader = rows[0];
+  collectrParsedRows = rows.slice(1);
+  msg.textContent = `Found ${collectrParsedRows.length} rows.`;
+  const sel = document.getElementById("collectrValueCol");
+  sel.innerHTML = "";
+  collectrParsedHeader.forEach((h, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = h || `Column ${i + 1}`;
+    sel.appendChild(o);
+  });
+  const guess = collectrParsedHeader.findIndex(h => /market|value|price/i.test(h));
+  if (guess >= 0) sel.value = guess;
+  document.getElementById("collectrMappingRow").style.display = "block";
+});
+
+document.getElementById("collectrAddBtn").addEventListener("click", () => {
+  if (!collectrParsedRows) return;
+  const person = document.getElementById("collectrPerson").value;
+  const colIdx = parseInt(document.getElementById("collectrValueCol").value);
+  let total = 0;
+  collectrParsedRows.forEach(r => {
+    const raw = (r[colIdx] || "").replace(/[^0-9.\-]/g, "");
+    total += parseFloat(raw) || 0;
+  });
+  collectrTotals[person] = total;
+  document.getElementById("collectrInput").value = "";
+  document.getElementById("collectrMappingRow").style.display = "none";
+  document.getElementById("collectrParseMsg").textContent = "";
+  collectrParsedRows = null;
+  renderCollectrResults();
+});
+
+function renderCollectrResults() {
+  const el = document.getElementById("collectrResults");
+  const names = Object.keys(collectrTotals);
+  if (!names.length) { el.innerHTML = ""; return; }
+  el.innerHTML = names.map(name => {
+    const match = lastCalcResults.find(r => r.name === name);
+    const whatnotGross = match ? match.gross : 0;
+    const collectrVal = collectrTotals[name];
+    const pct = collectrVal > 0 ? (whatnotGross / collectrVal * 100) : 0;
+    const cls = whatnotGross >= collectrVal ? "flag-ok" : "flag-bad";
+    return `<div class="list-row" style="border:none;padding:8px 2px">
+      <span style="flex:1;font-weight:600">${name}</span>
+      <span class="muted" style="flex-shrink:0">Whatnot $${whatnotGross.toFixed(2)}</span>
+      <span class="muted" style="flex-shrink:0">Market $${collectrVal.toFixed(2)}</span>
+      <span class="${cls}" style="flex-shrink:0;font-weight:700">${pct.toFixed(0)}%</span>
+    </div>`;
+  }).join("");
+}
 
 document.getElementById("copySummaryBtn").addEventListener("click", () => {
   if (!lastCalcResults.length) return;
@@ -1122,6 +1214,8 @@ document.getElementById("archiveBtn").addEventListener("click", () => {
     document.getElementById("csvInput").value = "";
     document.getElementById("mappingCard").style.display = "none";
     document.getElementById("resultsCard").style.display = "none";
+    document.getElementById("collectrCard").style.display = "none";
+    collectrTotals = {};
     document.getElementById("parseMsg").textContent = "Archived. Live tracker reset for next show.";
   });
 });
