@@ -382,15 +382,28 @@
   <div class="screen" id="screen-search">
     <div class="card">
       <h2>Card Price Search</h2>
-      <p class="muted">Type a card name, then tap a source to check its price. Each opens that site's real search results in a new tab - no single source is always highest, so checking 2-3 quickly is the reliable move.</p>
+      <p class="muted">Live market pricing for Pokémon and One Piece singles, right here in the app.</p>
       <div class="row" style="margin-top:10px">
-        <input type="text" id="cardSearchInput" placeholder="e.g. Destined Rivals Mewtwo" style="flex:1;min-width:0">
+        <select id="searchGame" style="flex:1;min-width:120px">
+          <option value="pokemon">Pokémon</option>
+          <option value="one piece">One Piece</option>
+        </select>
       </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn" id="searchTcgBtn" style="flex:1">TCGPlayer</button>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="cardSearchInput" placeholder="e.g. Charizard ex, Surging Sparks" style="flex:1;min-width:0">
+      </div>
+      <button class="btn" id="searchGoBtn" style="margin-top:10px;width:100%">🔍 Search</button>
+      <p class="muted" id="searchStatusMsg" style="margin-top:8px;margin-bottom:0"></p>
+      <div id="searchResultsList" class="mini-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Cross-Check Elsewhere</h2>
+      <p class="muted">If a card isn't found above (new releases, sealed products, other games), check directly:</p>
+      <div class="row" style="margin-top:8px">
+        <button class="btn secondary" id="searchTcgBtn" style="flex:1">TCGPlayer</button>
         <button class="btn secondary" id="searchEbayBtn" style="flex:1">eBay Sold</button>
       </div>
-      <p class="muted" style="margin-top:10px">PriceCharting link isn't wired up yet - couldn't verify its exact search URL. Let me know if you want that added once we confirm the format.</p>
     </div>
   </div>
 
@@ -848,8 +861,160 @@ document.getElementById("searchEbayBtn").addEventListener("click", () => {
   if (!q) return;
   window.open("https://www.ebay.com/sch/i.html?_nkw=" + encodeURIComponent(q) + "&LH_Sold=1&LH_Complete=1", "_blank");
 });
+
+// ---------- TCG Tracking API (in-app Pokemon/One Piece pricing) ----------
+const TCG_API_BASE = "https://tcgtracking.com/tcgapi/v1";
+const TCG_GAME_IDS = { "pokemon": 3, "one piece": 68 };
+const TCG_SET_ALIASES = {
+  "eevee grove": [24380],
+  "mega evolution": [24380]
+};
+
+async function tcgFetchJson(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) { return null; }
+}
+
+function tcgTitleCaseFromSlug(slug) {
+  return slug
+    .replace(/^(pokemon|one-piece)-/, "")
+    .split("-")
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function tcgWordSlices(query) {
+  const words = query.trim().split(/\s+/).filter(Boolean);
+  const slices = [];
+  for (let len = words.length; len >= 1; len--) slices.push(words.slice(0, len).join(" "));
+  return slices;
+}
+
+function tcgScoreSetName(setName, queryWords) {
+  const nameLower = (setName || "").toLowerCase();
+  return queryWords.filter(w => nameLower.includes(w.toLowerCase())).length;
+}
+
+async function tcgFindBestSet(catId, query) {
+  const queryLower = query.toLowerCase().trim();
+  for (const alias in TCG_SET_ALIASES) {
+    if (queryLower.includes(alias)) return { ids: TCG_SET_ALIASES[alias], name: alias };
+  }
+  const queryWords = query.trim().split(/\s+/).filter(Boolean);
+  for (const slice of tcgWordSlices(query)) {
+    const data = await tcgFetchJson(`${TCG_API_BASE}/${catId}/search?q=${encodeURIComponent(slice)}`);
+    if (!data) continue;
+    const sets = Array.isArray(data) ? data : (data.results || data.sets || (data.id ? [data] : []));
+    if (sets.length) {
+      const scored = sets.map(s => ({ s, score: tcgScoreSetName(s.name, queryWords) }));
+      scored.sort((a, b) => b.score - a.score);
+      return { ids: [scored[0].s.id], name: scored[0].s.name || "" };
+    }
+  }
+  return { ids: [], name: "" };
+}
+
+async function searchProducts(query, game) {
+  const catId = TCG_GAME_IDS[(game || "").toLowerCase()];
+  if (!catId || !query) return [];
+  const { ids: setIds, name: setName } = await tcgFindBestSet(catId, query);
+  if (!setIds.length) return [];
+  const queryWords = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const setNameLower = (setName || "").toLowerCase();
+  // Match only on words NOT already part of the matched set's name (e.g. "charizard" out of
+  // "surging sparks charizard"), so we don't loosely match every product in the set just
+  // because the set name words appear in every product title. If the whole query was just
+  // the set name, fall back to showing the full set.
+  const distinguishingWords = queryWords.filter(w => !setNameLower.includes(w));
+  const wordsToMatch = distinguishingWords.length ? distinguishingWords : queryWords;
+
+  let allProducts = [];
+  for (const setId of setIds) {
+    const setData = await tcgFetchJson(`${TCG_API_BASE}/${catId}/sets/${setId}`);
+    const products = (setData && setData.products) || [];
+    allProducts = allProducts.concat(products.map(p => ({
+      productId: p.productId || p.product_id || p.id,
+      name: p.name || p.cleanName || p.clean_name || "",
+      imageUrl: p.image_url || p.imageUrl || ""
+    })));
+  }
+  return allProducts.filter(p => {
+    const nameLower = p.name.toLowerCase();
+    return wordsToMatch.every(w => nameLower.includes(w));
+  });
+}
+
+async function getProductPriceById(productId) {
+  const data = await tcgFetchJson(`${TCG_API_BASE}/products/${productId}`);
+  if (data && data.success && data.product) {
+    const tp = (data.prices && data.prices.tcgplayer && data.prices.tcgplayer[0]) || {};
+    return {
+      success: true,
+      name: data.product.name || data.product.clean_name,
+      imageUrl: data.product.image_url,
+      setName: data.product.set_name,
+      marketPrice: parseFloat(tp.market_price),
+      lowPrice: parseFloat(tp.low_price),
+      midPrice: parseFloat(tp.mid_price),
+      highPrice: parseFloat(tp.high_price),
+      url: data.product.url
+    };
+  }
+  const url = (data && data.product && data.product.url) || null;
+  const slugMatch = url && url.match(/\/product\/\d+\/([a-z0-9-]+)/i);
+  return { success: false, name: slugMatch ? tcgTitleCaseFromSlug(slugMatch[1]) : null, url };
+}
+
+async function runCardSearch() {
+  const query = getSearchQuery();
+  const game = document.getElementById("searchGame").value;
+  const statusEl = document.getElementById("searchStatusMsg");
+  const listEl = document.getElementById("searchResultsList");
+  if (!query) return;
+  statusEl.textContent = "Searching...";
+  listEl.innerHTML = "";
+  let products;
+  try {
+    products = await searchProducts(query, game);
+  } catch (e) {
+    statusEl.textContent = "Search failed - check your connection and try Cross-Check below.";
+    return;
+  }
+  if (!products.length) {
+    statusEl.textContent = "No matches found in the cache. Try Cross-Check below.";
+    return;
+  }
+  const top = products.slice(0, 10);
+  statusEl.textContent = `${products.length} match(es) - showing top ${top.length}. Fetching prices...`;
+  listEl.innerHTML = top.map(p => `
+    <div class="list-row" data-pid="${p.productId}">
+      ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:30px;height:42px;object-fit:cover;border-radius:4px;flex-shrink:0" loading="lazy">` : `<div style="width:30px;flex-shrink:0"></div>`}
+      <span style="flex:1;min-width:0;font-size:13px;font-weight:600">${p.name}</span>
+      <span class="muted price-cell" style="flex-shrink:0;font-size:12px">…</span>
+    </div>`).join("");
+
+  await Promise.all(top.map(async (p) => {
+    const price = await getProductPriceById(p.productId);
+    const cell = listEl.querySelector(`[data-pid="${p.productId}"] .price-cell`);
+    if (!cell) return;
+    if (price.success && !isNaN(price.marketPrice)) {
+      cell.textContent = `$${price.marketPrice.toFixed(2)}`;
+      cell.style.color = "var(--accent)";
+      cell.style.fontWeight = "700";
+      cell.classList.remove("muted");
+    } else {
+      cell.textContent = "n/a";
+    }
+  }));
+  statusEl.textContent = `${products.length} match(es) - showing top ${top.length}.`;
+}
+
+document.getElementById("searchGoBtn").addEventListener("click", runCardSearch);
 document.getElementById("cardSearchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); document.getElementById("searchTcgBtn").click(); }
+  if (e.key === "Enter") { e.preventDefault(); runCardSearch(); }
 });
 
 // ---------- Nav ----------
