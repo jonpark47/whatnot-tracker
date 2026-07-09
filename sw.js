@@ -1,4 +1,4 @@
-const CACHE_NAME = "whatnot-tracker-v2";
+const CACHE_NAME = "whatnot-tracker-v3";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
