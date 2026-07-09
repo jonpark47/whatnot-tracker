@@ -755,10 +755,15 @@ function defaultData() {
 
 function normalizeData(parsed) {
   if (!parsed) return defaultData();
+  // Firebase Realtime Database silently drops empty arrays when writing (an empty log: []
+  // never actually gets persisted) - so currentShow can come back missing .log entirely even
+  // though currentShow itself is present. Rebuild it from its parts, not just a truthy check
+  // on the whole object, or a fresh show with zero taps yet crashes renderLive()/tapSale().
+  const parsedShow = parsed.currentShow || {};
   return Object.assign(defaultData(), parsed, {
     people: parsed.people || defaultData().people,
     settings: Object.assign(defaultData().settings, parsed.settings),
-    currentShow: parsed.currentShow || { nextNumber: 1, log: [] },
+    currentShow: { nextNumber: parsedShow.nextNumber || 1, log: parsedShow.log || [] },
     history: parsed.history || [],
     expenses: parsed.expenses || []
   });
