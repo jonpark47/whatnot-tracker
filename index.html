@@ -346,9 +346,6 @@
     </div>
   </div>
   <div class="row" style="gap:8px;flex-wrap:nowrap">
-    <button class="icon-btn-round" id="setupBtn" aria-label="Setup">
-      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 12H2M22 12h-2.2M5.6 5.6l1.5 1.5M16.9 16.9l1.5 1.5M18.4 5.6l-1.5 1.5M7.1 16.9l-1.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    </button>
     <button class="icon-btn-round" id="themeToggle" aria-label="Toggle theme"></button>
   </div>
 </header>
@@ -615,6 +612,10 @@
 </main>
 
 <nav id="bottomNav">
+  <button data-screen="setup" class="active">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 12H2M22 12h-2.2M5.6 5.6l1.5 1.5M16.9 16.9l1.5 1.5M18.4 5.6l-1.5 1.5M7.1 16.9l-1.5 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <span>Setup</span>
+  </button>
   <button data-screen="live">
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M7.5 7.5a6.5 6.5 0 000 9M16.5 7.5a6.5 6.5 0 010 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     <span>Live</span>
@@ -825,8 +826,6 @@ function goToScreen(name) {
   if (name === "history") renderHistory();
   if (name === "setup") renderSetup();
 }
-
-document.getElementById("setupBtn").addEventListener("click", () => goToScreen("setup"));
 
 function connectRoom(roomCode) {
   if (roomRef) roomRef.off();
